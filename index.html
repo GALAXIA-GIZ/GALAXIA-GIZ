@@ -1,6 +1,6 @@
 <html><head><base href="https://websim.io/brawlgiz/">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700&family=Pacifico&display=swap');
 
 :root {
   --primary-color: #00ffff;
@@ -308,21 +308,19 @@ body {
   align-self: center;
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
-}
-
-@keyframes shake {
-  0% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
+@keyframes horizontal {
+  0% { transform: translateX(-5px); }
   50% { transform: translateX(5px); }
-  75% { transform: translateX(-5px); }
-  100% { transform: translateX(0); }
+  100% { transform: translateX(-5px); }
 }
 
-@keyframes rainbow {
+@keyframes vertical {
+  0% { transform: translateY(-5px); }
+  50% { transform: translateY(5px); }
+  100% { transform: translateY(-5px); }
+}
+
+@keyframes colorful {
   0% { color: red; }
   14% { color: orange; }
   28% { color: yellow; }
@@ -333,44 +331,15 @@ body {
   100% { color: red; }
 }
 
-.pulse { animation: pulse 2s infinite; }
-.shake { animation: shake 0.5s infinite; }
-.rainbow { animation: rainbow 5s infinite; }
-
-#playerNameDisplay {
-  font-size: 1.5em;
-  margin-bottom: 20px;
-  color: var(--primary-color);
-}
-
-#createAccountModal .modal-content {
-  max-width: 400px;
-}
-
-#accountForm {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-#accountForm input {
-  padding: 10px;
-  border-radius: 5px;
-  border: 1px solid var(--primary-color);
-  background-color: rgba(255, 255, 255, 0.1);
-  color: var(--text-color);
-}
-
-#accountForm button {
-  align-self: center;
-}
+.horizontal { animation: horizontal 2s infinite; }
+.vertical { animation: vertical 2s infinite; }
+.colorful { animation: colorful 5s infinite; }
 </style>
 </head><body><audio id="buttonClickSound" src="button-click.mp3" preload="auto"></audio>
 
 <div class="stars"></div>
 <div class="game-container">
-  <h1>Brawl GIZ</h1>
+  <h1>GALAXIA-GIZ</h1>
   <h2 id="playerNameDisplay"></h2>
   <div class="player-stats">
     <div class="stat">
@@ -392,7 +361,6 @@ body {
   <button id="settingsButton" class="button">Configuración</button>
   <button id="customizeNameButton" class="button">Personalizar Nombre</button>
   <button id="topButton" class="button">Top</button>
-  <button id="connectAccountButton" class="button">Conectar Cuenta</button>
   <div id="gameResult"></div>
   <div id="adminPanel">
     <h3>Panel de Admin</h3>
@@ -431,8 +399,6 @@ body {
       <button id="changeNameButton" class="button">Cambiar Nombre</button>
     </div>
     <button id="createAccountButton" class="button">Crear Cuenta</button>
-    <button id="connectExistingAccountButton" class="button">Conectar Cuenta Existente</button>
-    <button id="disconnectAccountButton" class="button" style="display: none;">Desconectarse</button>
   </div>
 </div>
 
@@ -441,9 +407,9 @@ body {
     <span class="close">×</span>
     <h2>Crear Cuenta</h2>
     <form id="accountForm">
-      <input type="text" id="usernameInput" placeholder="Nombre de usuario" required="">
-      <input type="password" id="passwordInput" placeholder="Contraseña" required="">
-      <input type="password" id="confirmPasswordInput" placeholder="Confirmar contraseña" required="">
+      <input type="text" id="usernameInput" placeholder="Nombre de usuario" required>
+      <input type="password" id="passwordInput" placeholder="Contraseña" required>
+      <input type="password" id="confirmPasswordInput" placeholder="Confirmar contraseña" required>
       <button type="submit" class="button">Crear Cuenta</button>
     </form>
     <div>
@@ -465,6 +431,16 @@ body {
       <option value="pulse">Pulsar</option>
       <option value="shake">Temblar</option>
       <option value="rainbow">Arcoíris</option>
+      <option value="horizontal">Horizontal</option>
+      <option value="vertical">Vertical</option>
+      <option value="colorful">Colorido sincronizado</option>
+    </select>
+    <select id="nameFontSelect">
+      <option value="'Exo 2', sans-serif">Exo 2</option>
+      <option value="Arial, sans-serif">Arial</option>
+      <option value="'Times New Roman', serif">Times New Roman</option>
+      <option value="'Courier New', monospace">Courier New</option>
+      <option value="'Pacifico', cursive">Pacifico</option>
     </select>
     <button id="applyNameCustomization" class="button">Aplicar</button>
   </div>
@@ -523,6 +499,7 @@ let gameState = {
   currentWinStreak: 0,
   nameColor: '',
   nameAnimation: '',
+  nameFont: "'Exo 2', sans-serif",
   playerId: '',
   connected: false
 };
@@ -561,9 +538,26 @@ function updateUI() {
   document.getElementById('coinCount').textContent = gameState.coins;
   document.getElementById('gemCount').textContent = gameState.gems;
   document.getElementById('adminPanel').style.display = gameState.adminMode ? 'block' : 'none';
+  document.getElementById('customizeNameButton').style.display = gameState.adminMode ? 'inline-block' : 'none';
   updateProfile();
   updatePlayerNameDisplay();
-  updateAccountUI();
+}
+
+function toggleAdminMode() {
+  const password = prompt("Ingrese la contraseña de administrador:");
+  if (password === "ooo64") {
+    gameState.adminMode = !gameState.adminMode;
+    gameState.fullAdminMode = true;
+    alert(gameState.adminMode ? "Modo Admin completo activado: ¡Disfruta de tus victorias sin límites!" : "Modo Admin desactivado");
+    updateUI();
+  } else if (password === "admin340") {
+    gameState.adminMode = !gameState.adminMode;
+    gameState.fullAdminMode = false;
+    alert(gameState.adminMode ? "Modo Admin limitado activado: Solo puedes personalizar tu nombre." : "Modo Admin desactivado");
+    updateUI();
+  } else {
+    alert("Contraseña incorrecta");
+  }
 }
 
 function updatePlayerNameDisplay() {
@@ -572,10 +566,25 @@ function updatePlayerNameDisplay() {
 
   if (gameState.adminMode) {
     playerNameDisplay.style.color = gameState.nameColor || 'white';
+    playerNameDisplay.style.fontFamily = gameState.nameFont || "'Exo 2', sans-serif";
     playerNameDisplay.className = gameState.nameAnimation || '';
+    
+    if (gameState.nameAnimation === 'colorful') {
+      playerNameDisplay.style.background = 'linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet)';
+      playerNameDisplay.style.webkitBackgroundClip = 'text';
+      playerNameDisplay.style.webkitTextFillColor = 'transparent';
+    } else {
+      playerNameDisplay.style.background = 'none';
+      playerNameDisplay.style.webkitBackgroundClip = 'initial';
+      playerNameDisplay.style.webkitTextFillColor = 'initial';
+    }
   } else {
     playerNameDisplay.style.color = 'white';
+    playerNameDisplay.style.fontFamily = "'Exo 2', sans-serif";
     playerNameDisplay.className = '';
+    playerNameDisplay.style.background = 'none';
+    playerNameDisplay.style.webkitBackgroundClip = 'initial';
+    playerNameDisplay.style.webkitTextFillColor = 'initial';
   }
 }
 
@@ -663,23 +672,6 @@ function selectBrawler(brawler) {
   gameState.selectedBrawler = brawler;
   alert(`¡Buen trabajo, seleccionaste a ${brawler}!`);
   closeModal('brawlerModal');
-}
-
-function toggleAdminMode() {
-  const password = prompt("Ingrese la contraseña de administrador:");
-  if (password === "ooo64") {
-    gameState.adminMode = !gameState.adminMode;
-    gameState.fullAdminMode = true;
-    alert(gameState.adminMode ? "Modo Admin completo activado: ¡Disfruta de tus victorias sin límites!" : "Modo Admin desactivado");
-    updateUI();
-  } else if (password === "admin340") {
-    gameState.adminMode = !gameState.adminMode;
-    gameState.fullAdminMode = false;
-    alert(gameState.adminMode ? "Modo Admin limitado activado: Solo puedes personalizar tu nombre." : "Modo Admin desactivado");
-    updateUI();
-  } else {
-    alert("Contraseña incorrecta");
-  }
 }
 
 function openModal(modalId) {
@@ -777,33 +769,6 @@ function loadProgress() {
   }
 }
 
-function updateAccountUI() {
-  const connectButton = document.getElementById('connectAccountButton');
-  const disconnectButton = document.getElementById('disconnectAccountButton');
-  
-  if (gameState.connected) {
-    connectButton.style.display = 'none';
-    disconnectButton.style.display = 'block';
-  } else {
-    connectButton.style.display = 'block';
-    disconnectButton.style.display = 'none';
-  }
-}
-
-function connectAccount() {
-  gameState.connected = true;
-  saveProgress();
-  updateAccountUI();
-  alert('Cuenta conectada exitosamente.');
-}
-
-function disconnectAccount() {
-  gameState.connected = false;
-  saveProgress();
-  updateAccountUI();
-  alert('Cuenta desconectada exitosamente.');
-}
-
 function createAccount(event) {
   event.preventDefault();
   const username = document.getElementById('usernameInput').value;
@@ -820,38 +785,27 @@ function createAccount(event) {
     return;
   }
 
-  gameState.connected = true;
   gameState.playerName = username;
   gameState.playerId = generatePlayerId();
   saveProgress();
-  updateAccountUI();
   closeModal('createAccountModal');
   alert('Cuenta creada exitosamente.');
-}
-
-function signUpWithService(service) {
-  switch(service) {
-    case 'Gmail':
-      break;
-    case 'Google':
-      break;
-    case 'Facebook':
-      break;
-  }
+  updateUI();
 }
 
 function handleCustomizeNameClick() {
-  if (!gameState.adminMode) {
+  if (gameState.adminMode) {
+    openCustomizeNameModal();
+  } else {
     alert("Necesitas permiso de administrador para usar esta opción.");
-    return;
   }
-  openCustomizeNameModal();
 }
 
 function openCustomizeNameModal() {
   document.getElementById('customNameInput').value = gameState.playerName;
   document.getElementById('nameColorPicker').value = gameState.nameColor || '#ffffff';
   document.getElementById('nameAnimationSelect').value = gameState.nameAnimation || 'none';
+  document.getElementById('nameFontSelect').value = gameState.nameFont || "'Exo 2', sans-serif";
   openModal('customizeNameModal');
 }
 
@@ -859,11 +813,13 @@ function applyNameCustomization() {
   const newName = document.getElementById('customNameInput').value.trim();
   const newColor = document.getElementById('nameColorPicker').value;
   const newAnimation = document.getElementById('nameAnimationSelect').value;
+  const newFont = document.getElementById('nameFontSelect').value;
 
   if (newName) {
     gameState.playerName = newName;
     gameState.nameColor = newColor;
     gameState.nameAnimation = newAnimation;
+    gameState.nameFont = newFont;
     updatePlayerNameDisplay();
     closeModal('customizeNameModal');
     alert('Nombre personalizado aplicado con éxito.');
@@ -872,67 +828,73 @@ function applyNameCustomization() {
   }
 }
 
-// Event Listeners
-document.getElementById('playButton').addEventListener('click', () => {
-  playButtonSound();
-  playGame();
-});
-document.getElementById('selectBrawlerButton').addEventListener('click', () => {
-  playButtonSound();
-  createBrawlerGrid();
-  openModal('brawlerModal');
-});
-document.getElementById('profileButton').addEventListener('click', () => {
-  playButtonSound();
-  updateProfile();
-  openModal('profileModal');
-});
-document.getElementById('settingsButton').addEventListener('click', () => {
-  playButtonSound();
-  openModal('settingsModal');
-});
-document.getElementById('customizeNameButton').addEventListener('click', handleCustomizeNameClick);
-document.getElementById('adminModeButton').addEventListener('click', () => {
-  playButtonSound();
-  toggleAdminMode();
-});
-document.getElementById('changeNameButton').addEventListener('click', () => {
-  playButtonSound();
-  changeName();
-});
-document.getElementById('claimRewardButton').addEventListener('click', () => {
-  playButtonSound();
-  claimDailyReward();
-});
-document.getElementById('createAccountButton').addEventListener('click', () => {
-  playButtonSound();
-  openCreateAccountModal();
-});
-document.getElementById('connectAccountButton').addEventListener('click', () => {
-  playButtonSound();
-  if (gameState.connected) {
-    disconnectAccount();
-  } else {
-    connectAccount();
-  }
-});
-document.getElementById('accountForm').addEventListener('submit', createAccount);
-document.getElementById('gmailSignUp').addEventListener('click', () => signUpWithService('Gmail'));
-document.getElementById('googleSignUp').addEventListener('click', () => signUpWithService('Google'));
-document.getElementById('facebookSignUp').addEventListener('click', () => signUpWithService('Facebook'));
-document.getElementById('topButton').addEventListener('click', () => {
-  playButtonSound();
-  generateTopPlayers();
-  displayTopPlayers();
-  openModal('topPlayersModal');
-});
-
-document.getElementById('applyNameCustomization').addEventListener('click', applyNameCustomization);
-
-document.querySelectorAll('.close').forEach(closeButton => {
-  closeButton.addEventListener('click', () => {
-    closeButton.closest('.modal').style.display = 'none';
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('playButton').addEventListener('click', () => {
+    playButtonSound();
+    playGame();
   });
+  document.getElementById('selectBrawlerButton').addEventListener('click', () => {
+    playButtonSound();
+    createBrawlerGrid();
+    openModal('brawlerModal');
+  });
+  document.getElementById('profileButton').addEventListener('click', () => {
+    playButtonSound();
+    updateProfile();
+    openModal('profileModal');
+  });
+  document.getElementById('settingsButton').addEventListener('click', () => {
+    playButtonSound();
+    openModal('settingsModal');
+  });
+  document.getElementById('customizeNameButton').addEventListener('click', handleCustomizeNameClick);
+  document.getElementById('adminModeButton').addEventListener('click', () => {
+    playButtonSound();
+    toggleAdminMode();
+  });
+  document.getElementById('changeNameButton').addEventListener('click', () => {
+    playButtonSound();
+    changeName();
+  });
+  document.getElementById('claimRewardButton').addEventListener('click', () => {
+    playButtonSound();
+    claimDailyReward();
+  });
+  document.getElementById('createAccountButton').addEventListener('click', () => {
+    playButtonSound();
+    openCreateAccountModal();
+  });
+  document.getElementById('accountForm').addEventListener('submit', createAccount);
+  document.getElementById('gmailSignUp').addEventListener('click', () => signUpWithService('Gmail'));
+  document.getElementById('googleSignUp').addEventListener('click', () => signUpWithService('Google'));
+  document.getElementById('facebookSignUp').addEventListener('click', () => signUpWithService('Facebook'));
+  document.getElementById('topButton').addEventListener('click', () => {
+    playButtonSound();
+    generateTopPlayers();
+    displayTopPlayers();
+    openModal('topPlayersModal');
+  });
+
+  document.getElementById('applyNameCustomization').addEventListener('click', applyNameCustomization);
+
+  document.querySelectorAll('.close').forEach(closeButton => {
+    closeButton.addEventListener('click', () => {
+      closeButton.closest('.modal').style.display = 'none';
+    });
+  });
+
+  document.getElementById('speedSlider').addEventListener('input', function() {
+    gameState.gameSpeed = this.value;
+    document.getElementById('speedValue').textContent = this.value;
+  });
+
+  createStars();
+  if (!gameState.playerName || gameState.playerName === "Jugador") {
+    promptForUsername();
+  }
+  loadProgress();
+  updateUI();
+  generateMissions();
 });
 
 window.onclick = function(event) {
@@ -940,32 +902,5 @@ window.onclick = function(event) {
     event.target.style.display = 'none';
   }
 }
-
-document.getElementById('speedSlider').addEventListener('input', function() {
-  gameState.gameSpeed = this.value;
-  document.getElementById('speedValue').textContent = this.value;
-});
-
-// Create stars
-function createStars() {
-  const starsContainer = document.querySelector('.stars');
-  for (let i = 0; i < 100; i++) {
-    const star = document.createElement('div');
-    star.classList.add('star');
-    star.style.left = `${Math.random() * 100}%`;
-    star.style.top = `${Math.random() * 100}%`;
-    star.style.animationDelay = `${Math.random() * 5}s`;
-    starsContainer.appendChild(star);
-  }
-}
-
-createStars();
-if (!gameState.playerName || gameState.playerName === "Jugador") {
-  promptForUsername();
-}
-loadProgress();
-updateUI();
-generateMissions();
 </script>
-
 </body></html>
